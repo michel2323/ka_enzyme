@@ -57,7 +57,9 @@ version = "0.5.0"
 
 [[deps.CUDA]]
 deps = ["AbstractFFTs", "Adapt", "BFloat16s", "CEnum", "CUDA_Driver_jll", "CUDA_Runtime_Discovery", "CUDA_Runtime_jll", "Crayons", "DataFrames", "ExprTools", "GPUArrays", "GPUCompiler", "KernelAbstractions", "LLVM", "LLVMLoopInfo", "LazyArtifacts", "Libdl", "LinearAlgebra", "Logging", "NVTX", "Preferences", "PrettyTables", "Printf", "Random", "Random123", "RandomNumbers", "Reexport", "Requires", "SparseArrays", "StaticArrays", "Statistics"]
-git-tree-sha1 = "baa8ea7a1ea63316fa3feb454635215773c9c845"
+git-tree-sha1 = "ac37908e095fc94243a2ed8013eaff89114f62d0"
+repo-rev = "vc/ka_enzyme"
+repo-url = "https://github.com/JuliaGPU/CUDA.jl.git"
 uuid = "052768ef-5323-5732-b1bb-66c8b64840ba"
 version = "5.2.0"
 
@@ -158,7 +160,7 @@ version = "1.6.0"
 
 [[deps.Enzyme]]
 deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Preferences", "Printf", "Random"]
-git-tree-sha1 = "4b27f986fde21c2e168a21cf7383cd364a641519"
+git-tree-sha1 = "3a693b0d427401dff1cc699e7658469fc263b0ee"
 repo-rev = "tape_type_compilejob"
 repo-url = "https://github.com/EnzymeAD/Enzyme.jl.git"
 uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
@@ -254,15 +256,14 @@ version = "0.2.1+0"
 
 [[deps.KernelAbstractions]]
 deps = ["Adapt", "Atomix", "InteractiveUtils", "LinearAlgebra", "MacroTools", "PrecompileTools", "Requires", "SparseArrays", "StaticArrays", "UUIDs", "UnsafeAtomics", "UnsafeAtomicsLLVM"]
-git-tree-sha1 = "c13830db4903cc61f6d6d611f168278b0637a9be"
+git-tree-sha1 = "13d22cca25b6c3a57f222de65776a7c0ffbb927a"
 repo-rev = "enz_rev_gpu"
 repo-url = "https://github.com/JuliaGPU/KernelAbstractions.jl.git"
 uuid = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-version = "0.9.16"
-weakdeps = ["CUDA", "EnzymeCore"]
+version = "0.9.17"
+weakdeps = ["EnzymeCore"]
 
     [deps.KernelAbstractions.extensions]
-    CUDAEnzymeExt = ["CUDA", "EnzymeCore"]
     EnzymeExt = "EnzymeCore"
 
 [[deps.LLVM]]

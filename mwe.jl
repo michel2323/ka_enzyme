@@ -3,64 +3,37 @@ using Enzyme
 using KernelAbstractions
 using CUDA
 
-@kernel function square!(A)
+@kernel function id!(A,B)
     I = @index(Global, Linear)
-    @inbounds A[I] *= A[I]
+    @inbounds A[I] = B[I]
+    @synchronize()
+    return nothing
 end
 
-function square_caller(A, backend)
-    kernel = square!(backend)
-    kernel(A, ndrange=size(A))
-end
-
-
-@kernel function mul!(A, B)
-    I = @index(Global, Linear)
-    @inbounds A[I] *= B
-end
-
-function mul_caller(A, B, backend)
-    kernel = mul!(backend)
+function id_caller(A, B, backend)
+    kernel = id_square!(backend)
     kernel(A, B, ndrange=size(A))
 end
 
-function enzyme_testsuite(backend, ArrayT, supports_reverse=true)
+function enzyme_testsuite(backend, ArrayT)
     @testset "kernels" begin
-        A = ArrayT{Float64}(undef, 64)
+        A = CuArray(zeros(64))
         dA = ArrayT{Float64}(undef, 64)
+        B = ArrayT{Float64}(undef, 64)
+        dB = ArrayT{Float64}(undef, 64)
 
-        if supports_reverse
-
-            A .= (1:1:64)
-            dA .= 1
-
-            Enzyme.autodiff(Reverse, square_caller, Duplicated(A, dA), Const(backend()))
-            KernelAbstractions.synchronize(backend())
-            @test all(dA .≈ (2:2:128))
-
-
-            A .= (1:1:64)
-            dA .= 1
-
-            _, dB, _ = Enzyme.autodiff(Reverse, mul_caller, Duplicated(A, dA), Active(1.2), Const(backend()))[1]
-            KernelAbstractions.synchronize(backend())
-
-            @test all(dA .≈ 1.2)
-            @test dB ≈ sum(1:1:64)
-        end
-
-        A .= (1:1:64)
         dA .= 1
+        B .= (1:1:64)
+        dB .= 1
 
-        Enzyme.autodiff(Forward, square_caller, Duplicated(A, dA), Const(backend()))
+        Enzyme.autodiff(ReverseWithPrimal, id_caller, Duplicated(A, dA), Duplicated(B, dB), Const(backend()))
         KernelAbstractions.synchronize(backend())
-        @test all(dA .≈ 2:2:128)
-
+        @show A, B
+        @show dA, dB
     end
 end
 
 @assert CUDA.functional()
 @assert CUDA.has_cuda_gpu()
-# enzyme_testsuite(CPU, Array, true)
-# enzyme_testsuite(CUDABackend, CuArray, false)
-enzyme_testsuite(CUDABackend, CuArray, true)
+# enzyme_testsuite(CPU, Array)
+enzyme_testsuite(CUDABackend, CuArray)
