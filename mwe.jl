@@ -13,6 +13,7 @@ end
 function id_caller(A, B, backend)
     kernel = id_square!(backend)
     kernel(A, B, ndrange=size(A))
+    return nothing
 end
 
 function enzyme_testsuite(backend, ArrayT)
