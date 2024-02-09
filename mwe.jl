@@ -11,7 +11,7 @@ using CUDA
 end
 
 function id_caller(A, B, backend)
-    kernel = id_square!(backend)
+    kernel = id!(backend)
     kernel(A, B, ndrange=size(A))
     return nothing
 end
