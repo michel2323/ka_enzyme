@@ -6,33 +6,28 @@ using EnzymeCore
 using EnzymeCore.EnzymeRules
 
 const KA = KernelAbstractions
-function EnzymeRules.augmented_primal(
-    config::Config,
-    func::Const{typeof(KA.synchronize)},
-    ::Type{Const{Nothing}},
-    backend::T
-) where T <: EnzymeCore.Annotation
-    println("Forward synchronize for $(typeof(backend))")
-    return AugmentedReturn{Nothing, Nothing, Any}(
-        nothing, nothing, (nothing)
-    )
+
+struct MyData
+    A::Array{Float64}
+    B::Array{Float64}
 end
 
-function EnzymeRules.reverse(config::Config, func::Const{typeof(KA.synchronize)}, ::Type{Const{Nothing}}, tape, backend)
-    println("Reverse synchronize for $(typeof(backend))")
-    return (nothing,)
+@kernel function square!(A,B)
+    I = @index(Global, Linear)
+    @inbounds A[I] = B[I] * B[I]
+    @synchronize()
 end
-const KA = KernelAbstractions
 
-# @kernel function square!(A,B)
-#     I = @index(Global, Linear)
-#     @inbounds A[I] = B[I] * B[I]
-#     @synchronize()
-# end
+function square_caller(data, backend)
+    kernel = square!(backend)
+    kernel(data.A, data.B, ndrange=size(data.A))
+    KA.synchronize(backend)
+    return nothing
+end
 
 function square_caller(A, B, backend)
-    # kernel = square!(backend)
-    # kernel(A, B, ndrange=size(A))
+    kernel = square!(backend)
+    kernel(A, B, ndrange=size(A))
     KA.synchronize(backend)
     return nothing
 end
@@ -46,20 +41,21 @@ function enzyme_testsuite(backend, ArrayT)
     dA .= 1
     B .= (1:1:64)
     dB .= 1
-    x = [2.0]
-    dx = [0.0]
-    # Enzyme.autodiff(
-    #     ReverseWithPrimal, square_caller, Duplicated(A, dA),
-    #     Duplicated(B, dB), Duplicated(x,dx)
-    # )
+    data = MyData(A, B)
+    ddata = MyData(dA, dB)
+    square_caller(data, backend())
     Enzyme.autodiff(
-        ReverseWithPrimal, square_caller, Duplicated(A, dA),
-        Duplicated(B, dB), Const(backend())
+        Reverse, square_caller, Duplicated(A, dA), Duplicated(B, dB), Const(backend())
     )
     KA.synchronize(backend())
+    # Does not work
+    Enzyme.autodiff(
+        Reverse, square_caller, Duplicated(data, ddata), Const(backend())
+    )
+    KA.synchronize(backend())
+    # @show ddata.B
+    # @show dB
 end
 
-# Doesn't trigger rules above
 enzyme_testsuite(CPU, Array)
-# Triggers rules above
-enzyme_testsuite(CUDABackend, CuArray)
+# enzyme_testsuite(CUDABackend, CuArray)
